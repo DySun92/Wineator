@@ -2,15 +2,15 @@ import React from 'react';
 
 export default function WineCard({ wine, t }) {
   return (
-    <article className="wine-card">
+    <article className="wine-card" role="article" aria-label={wine.name}>
       <div className="wine-img-wrap">
         <img src={wine.image} alt={wine.name} onError={(e)=>e.target.src='/wines/fallback.png'} className="wine-img" />
       </div>
       <div className="wine-body">
-        <div>
+        <div style={{textAlign:'left'}}>
           <div className="wine-name">{wine.name}</div>
           <div className="small">{wine.type} • {wine.body} • {wine.sweetness}</div>
-          <div className="small">{t('price')}: {wine.price}€ • {t('origin')}: {wine.origin}</div>
+          <div className="small">{t('priceRangeLabel') ? `${t('priceRangeLabel')}: ${wine.price}€` : `Preço: ${wine.price}€`} • {t('origin') ? `${t('origin')}: ${wine.origin}` : `Origem: ${wine.origin}`}</div>
         </div>
         <div style={{textAlign:'right'}}>
           <div style={{fontWeight:800}}>{wine.stock > 0 ? `x${wine.stock}` : '—'}</div>
