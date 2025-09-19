@@ -1,14 +1,21 @@
 import React from 'react';
 
-export default function WineCard({ wine }) {
+export default function WineCard({ wine, t }) {
   return (
-    <div className="p-4 border rounded-lg shadow bg-white">
-      <img src={wine.image} alt={wine.name} className="mb-2 rounded h-48 w-full object-cover" />
-      <h3 className="font-bold text-lg">{wine.name}</h3>
-      <p>{wine.type} | {wine.sweetness} | {wine.body}</p>
-      <p>Preço: {wine.priceRange}€</p>
-      <p>Origem: {wine.origin}</p>
-      <p>Ocasião: {wine.occasion}</p>
+    <div className="card" role="article" aria-label={wine.name}>
+      <img src={wine.image} alt={wine.name} className="wine-img" />
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:8}}>
+        <div>
+          <div style={{fontWeight:700}}>{wine.name}</div>
+          <div className="small">{wine.type} • {wine.body} • {wine.sweetness}</div>
+          <div className="small">{t('price')}: {wine.price}€ • {t('origin')}: {wine.origin}</div>
+          <div className="small">{t('occasion')}: {wine.occasion}</div>
+        </div>
+        <div style={{textAlign:'right'}}>
+          <div style={{fontWeight:700}}>{wine.stock > 0 ? `${wine.stock}` : '—'}</div>
+          <div className="small">{wine.stock > 0 ? `${t('price')}` : <span style={{color:'#bb1f3a'}}>Sem stock</span>}</div>
+        </div>
+      </div>
     </div>
   );
 }
