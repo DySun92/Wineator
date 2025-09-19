@@ -1,98 +1,21 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import LanguageSwitcher from './components/LanguageSwitcher';
 import Quiz from './components/Quiz';
 import Results from './components/Results';
-import initialWines from './data/wines';
-import { getT, LANGS } from './i18n';
+import { getT } from './i18n';
+import wines from './data/wines';
 
-/* CONFIG */
-const MIN_RESULTS = 3;
-const WEIGHTS = { type: 2.0, sweetness: 1.5, body: 1.8, priceRange: 1.2, origin: 0.8, occasion: 1.0 };
-
-/* Helpers */
-function priceToRange(price) {
-  if (price <= 10) return '0-10';
-  if (price <= 20) return '10-20';
-  if (price <= 30) return '20-30';
-  if (price <= 50) return '30-50';
-  return '50+';
-}
-
-function scoreWine(wine, answers) {
-  let total = 0, matched = 0;
-  for (const k of Object.keys(WEIGHTS)) {
-    const w = WEIGHTS[k] || 1;
-    total += w;
-    const a = answers[k];
-    if (!a || a === 'Indiferente') { matched += w * 0.5; continue; }
-    if (k === 'priceRange') {
-      const wineRange = priceToRange(wine.price ?? wine.priceRange ?? 0);
-      if (wineRange === a) matched += w;
-      else {
-        // adjacent range gives half match
-        const order = ['0-10','10-20','20-30','30-50','50+'];
-        const di = Math.abs(order.indexOf(wineRange) - order.indexOf(a));
-        if (di === 1) matched += w * 0.6;
-      }
-    } else {
-      if (String(wine[k]) === String(a)) matched += w;
-    }
-  }
-  // result 0..100
-  return Math.round((matched / total) * 100);
-}
-
-export default function App() {
+export default function App(){
   const [lang, setLang] = useState('pt');
-  const t = useMemo(() => getT(lang), [lang]);
-  const [catalog, setCatalog] = useState(() => initialWines);
-  const [results, setResults] = useState([]);
-  const [answers, setAnswers] = useState({});
-  const [includeOOS, setIncludeOOS] = useState(false);
+  const t = useMemo(()=> getT(lang), [lang]);
+  const [answers, setAnswers] = useState(null);
 
-  useEffect(() => {
-    // ensure images load quickly by preloading first 3 images
-    catalog.slice(0,3).forEach(w => {
-      const img = new Image(); img.src = w.image;
-    });
-  }, [catalog]);
-
-  function computeResults(finalAnswers, includeOut=false) {
-    // score
-    let scored = catalog.map(w => ({ ...w, score: scoreWine(w, finalAnswers) }));
-    // small boost for in-stock
-    scored = scored.map(s => ({ ...s, score: s.score + (s.stock > 0 ? 6 : 0) }));
-    scored.sort((a,b) => b.score - a.score);
-
-    // filter out of stock if not included
-    let filtered = includeOut ? scored : scored.filter(s => s.stock > 0);
-    if (filtered.length < MIN_RESULTS) {
-      const need = Math.min(MIN_RESULTS - filtered.length, scored.length - filtered.length);
-      const extras = scored.filter(s => !filtered.includes(s)).slice(0, need);
-      filtered = filtered.concat(extras);
-    }
-
-    // fallback: if still empty (catalog < MIN_RESULTS) use the top ones
-    if (filtered.length === 0) filtered = scored.slice(0, Math.min(MIN_RESULTS, scored.length));
-
-    setResults(filtered.slice(0, Math.min(MIN_RESULTS, filtered.length)));
-  }
-
-  function onFinishQuiz(finalAnswers) {
+  function onFinish(finalAnswers){
     setAnswers(finalAnswers);
-    computeResults(finalAnswers, includeOOS);
   }
 
-  function restart() {
-    setAnswers({});
-    setResults([]);
-    setIncludeOOS(false);
-  }
-
-  function toggleIncludeOOS() {
-    const val = !includeOOS;
-    setIncludeOOS(val);
-    if (Object.keys(answers).length) computeResults(answers, val);
+  function restart(){
+    setAnswers(null);
   }
 
   return (
@@ -112,16 +35,25 @@ export default function App() {
       </header>
 
       <main>
-        {!results.length ? (
-          <div className="grid">
-            <Quiz lang={lang} t={t} onFinish={onFinishQuiz} />
-          </div>
+        {!answers ? (
+          <Quiz lang={lang} t={t} onFinish={onFinish} />
         ) : (
-          <Results t={t} results={results} restart={restart} includeOOS={includeOOS} toggleIncludeOOS={toggleIncludeOOS} />
+          <Results answers={answers} onRestart={restart} t={t} />
         )}
       </main>
 
-      <footer className="footer">© {new Date().getFullYear()} Wineator — {t('tagline')}</footer>
+      <footer className="footer">
+        <div>© {new Date().getFullYear()} Wineator</div>
+        <div className="social">
+          <a href="https://instagram.com/" target="_blank" rel="noreferrer" aria-label={t('instagramAlt')}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+              <path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5z" stroke="#6b1f3a" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7z" stroke="#6b1f3a" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M17.5 6.5h.01" stroke="#6b1f3a" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </a>
+        </div>
+      </footer>
     </div>
   );
 }
