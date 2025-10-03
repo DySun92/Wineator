@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function WineCard({ wine, t }) {
+export default function WineCard({ wine }) {
   return (
     <article className="wine-card" role="article" aria-label={wine.name}>
       <div className="wine-img-wrap">
@@ -10,7 +10,7 @@ export default function WineCard({ wine, t }) {
         <div style={{textAlign:'left'}}>
           <div className="wine-name">{wine.name}</div>
           <div className="small">{wine.type} • {wine.body} • {wine.sweetness}</div>
-          <div className="small">{t('priceRangeLabel') ? `${t('priceRangeLabel')}: ${wine.price}€` : `Preço: ${wine.price}€`} • {t('origin') ? `${t('origin')}: ${wine.origin}` : `Origem: ${wine.origin}`}</div>
+          <div className="small">Preço: {wine.price}€ • Origem: {wine.origin}</div>
         </div>
         <div style={{textAlign:'right'}}>
           <div style={{fontWeight:800}}>{wine.stock > 0 ? `x${wine.stock}` : '—'}</div>

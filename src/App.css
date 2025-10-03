@@ -1,65 +1,81 @@
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  background: url("/bg-grapes.jpg") no-repeat center center fixed;
+  background-size: cover;
+}
+
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+  background: rgba(0, 0, 0, 0.7); /* overlay escuro */
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 20px;
+}
+
+.app-container {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  padding: 20px;
+  max-width: 480px;
+  width: 100%;
   text-align: center;
-}
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
-}
-.app-header {
-  text-align: center;
-  margin-bottom: 20px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+  animation: fadeIn 0.6s ease;
 }
 
 .app-logo {
-  width: 80px;
-  height: auto;
-  margin-bottom: 12px;
-}
-
-.app-title {
-  font-size: 2rem;
-  margin: 5px 0;
-}
-
-.slogan {
-  font-size: 1rem;
-  color: #800000;
-  font-weight: 500;
+  max-width: 120px;
   margin-bottom: 15px;
 }
 
+h1 {
+  font-size: 1.8rem;
+  color: #800000;
+  margin-bottom: 10px;
+}
+
+.question {
+  font-size: 1.2rem;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+button {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  margin: 10px 0;
+  font-size: 1rem;
+  background: #800000;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  transition: transform 0.2s ease, background 0.2s ease;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #a00000;
+  transform: scale(1.02);
+}
+
+.result-card {
+  margin: 15px 0;
+  padding: 12px;
+  background: #f7f7f7;
+  border-radius: 10px;
+  border-left: 6px solid #800000;
+  text-align: left;
+}
+
+.result-card h3 {
+  margin: 0;
+  color: #800000;
+}
+
+@keyframes fadeIn {
+  from {opacity: 0; transform: translateY(20px);}
+  to {opacity: 1; transform: translateY(0);}
+}

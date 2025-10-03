@@ -1,104 +1,173 @@
 import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import wines from '../data/wines';
-import { getT, getOptionLabel } from '../i18n';
+import menu from '../data/menu';
+import { getT, labelCategory, labelDish } from '../i18n';
 
-// helper price range
-function priceToRange(value){
-  if (value <= 10) return '0-10';
-  if (value <= 20) return '13-20' /* adapt to catalogue presence */;
-  if (value <= 30) return '21-30';
-  if (value <= 50) return '31-50';
-  return '50+';
-}
+export default function Quiz({ language='pt', onFinish }) {
+  const t = getT(language);
 
-// We'll map according to catalog values: 13-20,21-30,31-50,50+
-function priceRangeFor(price){
-  if(price <= 20) return '13-20';
-  if(price <= 30) return '21-30';
-  if(price <= 50) return '31-50';
-  return '50+';
-}
+  const [stepIndex, setStepIndex] = useState(0);
+  const [answers, setAnswers] = useState({
+    entradaCat: null,
+    entradaItem: null,
+    mainCat: null,
+    mainItem: null,
+    drinkType: null,     // 'Wine' | 'Cocktail'
+    winePref: null,
+    cFlavor: null,       // 'fresh' | 'fruity' | 'bitter' | 'sweet' | 'spiced'
+    cBase: null,         // 'Gin' | 'Vodka' | 'Rum' | 'Tequila' | 'Whiskey'
+    cStrength: null      // 'light' | 'medium' | 'strong'
+  });
 
-export default function Quiz({ lang, onFinish }) {
-  const t = getT(lang);
+  const steps = useMemo(()=> {
+    const common = [
+      { key: 'entradaCat', type:'cat',   title: t('chooseStarterCat'), data: Object.keys(menu.entradas) },
+      { key: 'entradaItem', type:'item', title: t('chooseStarterItem'), data: () => menu.entradas[answers.entradaCat] || [] },
 
-  // build sets from catalog (only options that exist)
-  const types = useMemo(()=> Array.from(new Set(wines.map(w => w.type))), []);
-  const priceRanges = useMemo(()=> {
-    const set = new Set(wines.map(w => priceRangeFor(w.price)));
-    // keep only ranges present and order them
-    const order = ['13-20','21-30','31-50','50+'];
-    return Array.from(set).sort((a,b)=>order.indexOf(a)-order.indexOf(b));
-  }, []);
-  // harmonization options fixed but show only items if present in any wine
-  const hasMeat = useMemo(()=> wines.some(w => w.food && w.food.includes('carne')), []);
-  const hasFish = useMemo(()=> wines.some(w => w.food && w.food.includes('peixe')), []);
-  // occasions present in catalog
-  const occasions = useMemo(()=> Array.from(new Set(wines.flatMap(w => w.occasion))).sort(), []);
-  const origins = useMemo(()=> Array.from(new Set(wines.map(w => w.origin))).sort(), []);
+      { key: 'mainCat',     type:'cat',  title: t('chooseMainCat'), data: Object.keys(menu.principais) },
+      { key: 'mainItem',    type:'item', title: t('chooseMainItem'), data: () => menu.principais[answers.mainCat] || [] },
 
-  // questions array (5 questions)
-  const QUESTIONS = [
-    { key:'type', label: { pt:'Que tipo de vinho prefere?', en:'Which type of wine do you prefer?', es:'¿Qué tipo de vino prefieres?', fr:'Quel type de vin préférez-vous ?' }, options: [...types] },
-    { key:'priceRange', label: { pt:'Qual a faixa de preço?', en:'Which price range?', es:'¿Qué rango de precio?', fr:'Quelle fourchette de prix ?' }, options: [...priceRanges] },
-    { key:'harmonization', label: { pt:'O vinho vai acompanhar carne ou peixe?', en:'Will the wine accompany meat or fish?', es:'¿El vino acompañará carne o pescado?', fr:'Le vin accompagnera-t-il de la viande ou du poisson ?' }, options: (() => {
-        const arr = [];
-        if(hasMeat) arr.push('Carne');
-        if(hasFish) arr.push('Peixe');
-        arr.push('SemPreferencia');
-        return arr;
-      })()
-    },
-    { key:'occasion', label: { pt:'Qual a ocasião?', en:'What\'s the occasion?', es:'¿Cuál es la ocasión?', fr:'Quelle est l\'occasion ?' }, options: [...occasions] },
-    { key:'origin', label: { pt:'Prefere alguma região?', en:'Do you prefer a region?', es:'¿Prefieres alguna región?', fr:'Préférez-vous une région ?' }, options: [...origins] }
-  ];
+      { key: 'drinkType', type:'options', title: t('chooseDrinkType'), data: [
+        { id:'d1', name: t('drinkTypes').wine, value: 'Wine' },
+        { id:'d2', name: t('drinkTypes').cocktail, value: 'Cocktail' }
+      ]},
+    ];
 
-  const [step, setStep] = useState(0);
-  const [answers, setAnswers] = useState({});
+    if(answers.drinkType === 'Wine'){
+      common.push({
+        key: 'winePref', type:'options', title: t('winePrefQ'), data: [
+          { id:'w0', name: t('wineTypes').indifferent, value: null },
+          { id:'w1', name: t('wineTypes').Tinto, value: 'Tinto' },
+          { id:'w2', name: t('wineTypes').Branco, value: 'Branco' },
+          { id:'w3', name: t('wineTypes').Rosé, value: 'Rosé' },
+          { id:'w4', name: t('wineTypes').Espumante, value: 'Espumante' },
+        ]
+      });
+    } else if(answers.drinkType === 'Cocktail'){
+      common.push(
+        { key:'cFlavor', type:'options', title: t('cocktailFlavorQ'), data: [
+          {id:'cf0', name:t('cocktailFlavor').indifferent, value:null},
+          {id:'cf1', name:t('cocktailFlavor').fresh, value:'fresh'},
+          {id:'cf2', name:t('cocktailFlavor').fruity, value:'fruity'},
+          {id:'cf3', name:t('cocktailFlavor').bitter, value:'bitter'},
+          {id:'cf4', name:t('cocktailFlavor').sweet, value:'sweet'},
+          {id:'cf5', name:t('cocktailFlavor').spiced, value:'spiced'},
+        ]},
+        { key:'cBase', type:'options', title: t('cocktailBaseQ'), data: [
+          {id:'cb0', name:t('cocktailBase').indifferent, value:null},
+          {id:'cb1', name:t('cocktailBase').gin, value:'Gin'},
+          {id:'cb2', name:t('cocktailBase').vodka, value:'Vodka'},
+          {id:'cb3', name:t('cocktailBase').rum, value:'Rum'},
+          {id:'cb4', name:t('cocktailBase').tequila, value:'Tequila'},
+          {id:'cb5', name:t('cocktailBase').whiskey, value:'Whiskey'},
+        ]},
+        { key:'cStrength', type:'options', title: t('cocktailStrengthQ'), data: [
+          {id:'cs0', name:t('cocktailStrength').indifferent, value:null},
+          {id:'cs1', name:t('cocktailStrength').light, value:'light'},
+          {id:'cs2', name:t('cocktailStrength').medium, value:'medium'},
+          {id:'cs3', name:t('cocktailStrength').strong, value:'strong'},
+        ]}
+      );
+    }
 
-  function handleAnswer(value){
-    const key = QUESTIONS[step].key;
-    const v = value === 'SemPreferencia' ? null : value;
-    const next = {...answers, [key]: v};
-    setAnswers(next);
-    if(step < QUESTIONS.length - 1) setStep(s => s + 1);
-    else onFinish(next);
+    return common;
+  }, [language, answers.entradaCat, answers.mainCat, answers.drinkType]);
+
+  const current = steps[stepIndex];
+  const items = typeof current.data === 'function' ? current.data() : current.data;
+
+  function onSelect(it){
+    const key = current.key;
+    let value = it;
+    if(key === 'drinkType' || key === 'winePref' || key.startsWith('c')) value = it.value ?? null;
+
+    setAnswers(prev => ({...prev, [key]: value}));
+
+    const next = stepIndex + 1;
+
+    // ⚙️ FIX: Se escolher "drinkType", nunca finalizar já — avançar para o novo passo (winePref ou cFlavor)
+    if(key === 'drinkType'){
+      setStepIndex(next);
+      return;
+    }
+
+    // Se ainda há passos, avança; caso contrário, finalizar
+    if(next < steps.length){
+      setStepIndex(next);
+    } else {
+      const final = {
+        entrada: answers.entradaItem,
+        principal: answers.mainItem,
+        drinkType: answers.drinkType ?? (key === 'drinkType' ? value : null),
+        winePref: key==='winePref' ? value : answers.winePref,
+        cFlavor: answers.cFlavor ?? (key==='cFlavor' ? value : null),
+        cBase: answers.cBase ?? (key==='cBase' ? value : null),
+        cStrength: answers.cStrength ?? (key==='cStrength' ? value : null)
+      };
+      if(final.principal?.price){
+        const p = Number(final.principal.price);
+        final.priceRange = p <= 20 ? '13-20' : p <= 30 ? '21-30' : p <= 50 ? '31-50' : '50+';
+      }
+      onFinish(final);
+    }
   }
 
-  return (
-    <div className="card">
-      <AnimatePresence mode="wait">
-        <motion.div key={step} initial={{opacity:0,x:30}} animate={{opacity:1,x:0}} exit={{opacity:0,x:-30}} transition={{duration:0.28}}>
-          <div className="progress-text">{t('questionOf', { current: step+1, total: QUESTIONS.length })}</div>
-          <h2 className="question-title">{QUESTIONS[step].label[lang]}</h2>
+  function goBack(){ setStepIndex(i => Math.max(0, i-1)); }
 
-          <div className="grid cols-2" style={{marginTop:10, gap:10}}>
-            {QUESTIONS[step].options.map(opt => {
-              let display = opt;
-              if(QUESTIONS[step].key === 'priceRange') display = getOptionLabel(lang, 'priceRange', opt);
-              if(QUESTIONS[step].key === 'type') display = getOptionLabel(lang, 'type', opt);
-              if(QUESTIONS[step].key === 'harmonization') display = getOptionLabel(lang, 'harmonization', opt);
-              if(QUESTIONS[step].key === 'occasion') display = getOptionLabel(lang, 'occasion', opt) || opt;
-              if(QUESTIONS[step].key === 'origin') display = opt;
-              return (
-                <motion.button key={opt}
-                  whileTap={{scale:0.98}}
-                  whileHover={{scale:1.02}}
-                  onClick={()=>handleAnswer(opt)}
-                  className="btn btn-primary"
-                  style={{minHeight:48, width:'100%', background:'var(--accent)'}}
-                  aria-label={display}
-                >
-                  {display}
-                </motion.button>
-              );
-            })}
+  // NOVO: 1–3 opções => coluna vertical elegante; 4+ => grelha
+  const fewOptions = items.length <= 3;
+  const containerClass = fewOptions ? 'stack few' : 'grid cols-2';
+
+  const renderLabel = (it) => {
+    if(current.type === 'cat'){
+      return labelCategory(current.key.includes('entrada') ? 'entradas' : 'principais', it, language);
+    }
+    if(current.type === 'item'){
+      return `${labelDish(it.id, it.name, language)}${it.price ? ` • ${it.price}€` : ''}`;
+    }
+    return it.name; // options
+  };
+
+  return (
+    <div className="card" style={{minHeight:'56svh', display:'flex', flexDirection:'column'}}>
+      <AnimatePresence mode="wait">
+        <motion.div key={stepIndex} initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-16}} transition={{duration:0.25}} style={{display:'flex', flexDirection:'column', flex:1}}>
+          <div className="progress-text">{t('questionOf', {current: stepIndex+1, total: steps.length})}</div>
+          <h2 className="question-title" style={{marginBottom:12}}>{current.title}</h2>
+
+          <div className={containerClass} style={{marginTop:4, flex:1}}>
+            {items.map((it) => (
+              <motion.button key={it.id || it}
+                whileTap={{scale:0.98}} whileHover={{scale:1.02}}
+                onClick={() => onSelect(it)}
+                className="btn btn-primary option-btn"
+              >
+                {renderLabel(it)}
+              </motion.button>
+            ))}
           </div>
 
           <div style={{display:'flex',justifyContent:'space-between',marginTop:12}}>
-            <button onClick={() => setStep(s => Math.max(0, s - 1))} className="btn btn-ghost">{t('btnBack')}</button>
-            <button onClick={() => handleAnswer('SemPreferencia')} className="btn btn-muted">{t('btnIndifferent')}</button>
+            <button onClick={goBack} className="btn btn-ghost">{t('btnBack')}</button>
+            <button onClick={()=>{
+              const next = stepIndex + 1;
+              if(next < steps.length) setStepIndex(next);
+              else {
+                const final = {
+                  entrada: answers.entradaItem,
+                  principal: answers.mainItem,
+                  drinkType: answers.drinkType ?? null,
+                  winePref: answers.winePref ?? null,
+                  cFlavor: answers.cFlavor ?? null,
+                  cBase: answers.cBase ?? null,
+                  cStrength: answers.cStrength ?? null,
+                  priceRange: answers.mainItem?.price
+                    ? (answers.mainItem.price <= 20 ? '13-20' : answers.mainItem.price <= 30 ? '21-30' : answers.mainItem.price <= 50 ? '31-50' : '50+')
+                    : null
+                };
+                onFinish(final);
+              }
+            }} className="btn btn-muted">{t('skip')}</button>
           </div>
         </motion.div>
       </AnimatePresence>
