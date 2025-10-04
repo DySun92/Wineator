@@ -2,9 +2,10 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import wines from '../data/wines';
 import cocktails from '../data/cocktails';
-import WineCard from './WineCard';
-import CocktailCard from "./CocktailCard";
+import WineCard from './WineCard.jsx';
+import CocktailCard from './cocktailcard.jsx'; // <-- tudo minúsculo + .jsx
 import { getT } from '../i18n';
+
 
 /** Pesos ajustados:
  *  - winePref agora é efetivamente “obrigatório” via filtragem do pool.
@@ -186,7 +187,7 @@ export default function Results({ answers, onRestart, language='pt' }) {
 
       <div className="grid adaptive-grid" style={{gap:12, marginTop:8}}>
         {finalList.map(item => isCocktail
-          ? <CocktailCard key={item.id} cocktail={item} />
+          ? <cocktailcard key={item.id} cocktail={item} />
           : <WineCard key={item.id} wine={item} />)}
       </div>
 

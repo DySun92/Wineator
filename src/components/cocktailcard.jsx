@@ -1,6 +1,7 @@
+// src/components/cocktailcard.jsx
 import React from "react";
 
-export default function cocktailcard({ cocktail }) {
+export default function CocktailCard({ cocktail }) {
   return (
     <article className="wine-card" role="article" aria-label={cocktail.name}>
       <div className="wine-img-wrap">
