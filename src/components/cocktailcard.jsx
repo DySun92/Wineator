@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function CocktailCard({ cocktail }) {
+export default function cocktailcard({ cocktail }) {
   return (
     <article className="wine-card" role="article" aria-label={cocktail.name}>
       <div className="wine-img-wrap">
