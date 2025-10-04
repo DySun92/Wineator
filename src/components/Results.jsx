@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import wines from '../data/wines';
 import cocktails from '../data/cocktails';
 import WineCard from './WineCard';
-import CocktailCard from './CocktailCard';
+import CocktailCard from "./CocktailCard";
 import { getT } from '../i18n';
 
 /** Pesos ajustados:
